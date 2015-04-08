@@ -4,7 +4,7 @@ from bat import Bat
 from draw import DrawFlock
 import random
 
-NUM_BATS = 5
+NUM_BATS = 50
 
 if __name__ == "__main__":
 

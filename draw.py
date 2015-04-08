@@ -160,6 +160,6 @@ class DrawFlock:
 	    pygame.display.flip()
 
 	    self.update()
-	    pygame.time.wait(10)
+	    pygame.time.wait(100)
 	pygame.quit()
 	quit()

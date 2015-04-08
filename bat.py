@@ -9,13 +9,22 @@ class Bat:
 
     def prepare_update(self, flock):
 	average_center = Vector3(0.,0.,0.)
+	get_away = Vector3(0.,0.,0.)
 	for f in flock:
 	    if f == self:
 	    	continue
-	    average_center += f.center
+	    if self.center.distance(f.center) < 10.0:
+	    	get_away -= f.center
+	    # should this be an else, or no matter what?
+	    else:
+		average_center += f.center
 
 	average_center /= len(flock) - 1
-	self.updated_velocity = average_center - self.center
+	center_vector = average_center - self.center
+
+	self.updated_velocity = center_vector.normalize()
+	if get_away.length() != 0:
+	    self.updated_velocity = get_away.normalize()
 	self.updated_velocity.normalize()
 
     def apply_update(self):

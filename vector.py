@@ -73,6 +73,16 @@ class Vector3:
     def normalize(self):
 	normalizer = (self.coords[0] ** 2. + self.coords[1] ** 2. + self.coords[2] ** 2.) ** .5
 	self.__itruediv__(normalizer)
+	return self
+
+    def distance(self, other):
+	tmp = 0.0
+	for i in range(3):
+	    tmp += (self.coords[i] - other.coords[i]) ** 2.
+	return tmp ** .5
+
+    def length(self):
+	return self.distance(Vector3(0,0,0))
 
     def toList(self):
 	return self.coords[:]
