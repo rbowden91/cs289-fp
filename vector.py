@@ -1,0 +1,78 @@
+class Vector3:
+
+    def __init__(self, pt1, pt2, pt3):
+	self.coords = [pt1, pt2, pt3]
+
+    def __sub__(self, other):
+	tmp = Vector3(self.coords[0], self.coords[1], self.coords[2])
+	if isinstance(other, int) or isinstance(other, float):
+	    for i in range(3):
+		tmp.coords[i] -= other
+	elif isinstance(other, type(self)):
+	    for i in range(3):
+		tmp.coords[i] -= other.coords[i]
+	else:
+	    raise TypeError("Unexpected type.")
+	return tmp
+
+    def __add__(self, other):
+	tmp = Vector3(self.coords[0], self.coords[1], self.coords[2])
+	if isinstance(other, int) or isinstance(other, float):
+	    for i in range(3):
+		tmp.coords[i] += other
+	elif isinstance(other, type(self)):
+	    for i in range(3):
+		tmp.coords[i] += other.coords[i]
+	else:
+	    raise TypeError("Unexpected type.")
+	return tmp
+
+    def __iadd__(self, other):
+	if isinstance(other, int) or isinstance(other, float):
+	    for i in range(3):
+		self.coords[i] += other
+	elif isinstance(other, type(self)):
+	    for i in range(3):
+		self.coords[i] += other.coords[i]
+	else:
+	    raise TypeError("Unexpected type.")
+	return self
+
+    def __radd__(self, other):
+	return self.__add__(other)
+
+    def __div__(self, other):
+	tmp = Vector3(self.coords[0], self.coords[1], self.coords[2])
+	if isinstance(other, int) or isinstance(other, float):
+	    for i in range(3):
+		tmp.coords[i] /= other
+	elif isinstance(other, type(self)):
+	    for i in range(3):
+		tmp.coords[i] /= other.coords[i]
+	else:
+	    raise TypeError("Unexpected type.")
+	return tmp
+
+    def __truediv__(self, other):
+	self.__div__(other)
+
+    def __idiv__(self, other):
+	if isinstance(other, int) or isinstance(other, float):
+	    for i in range(3):
+		self.coords[i] /= other
+	elif isinstance(other, type(self)):
+	    for i in range(3):
+		self.coords[i] /= other.coords[i]
+	else:
+	    raise TypeError("Unexpected type.")
+	return self
+
+    def __itruediv__(self, other):
+	self.__idiv__(other)
+
+    def normalize(self):
+	normalizer = (self.coords[0] ** 2. + self.coords[1] ** 2. + self.coords[2] ** 2.) ** .5
+	self.__itruediv__(normalizer)
+
+    def toList(self):
+	return self.coords[:]
