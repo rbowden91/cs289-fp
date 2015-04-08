@@ -67,6 +67,29 @@ class Vector3:
 	    raise TypeError("Unexpected type.")
 	return self
 
+    def __mul__(self, other):
+	tmp = Vector3(self.coords[0], self.coords[1], self.coords[2])
+	if isinstance(other, int) or isinstance(other, float):
+	    for i in range(3):
+		tmp.coords[i] *= other
+	elif isinstance(other, type(self)):
+	    for i in range(3):
+		tmp.coords[i] *= other.coords[i]
+	else:
+	    raise TypeError("Unexpected type.")
+	return tmp
+
+    def __imul__(self, other):
+	if isinstance(other, int) or isinstance(other, float):
+	    for i in range(3):
+		self.coords[i] *= other
+	elif isinstance(other, type(self)):
+	    for i in range(3):
+		self.coords[i] *= other.coords[i]
+	else:
+	    raise TypeError("Unexpected type.")
+	return self
+
     def __itruediv__(self, other):
 	self.__idiv__(other)
 
