@@ -6,6 +6,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 
 import random
+from vector import Vector3
 
 class DrawFlock:
 
@@ -112,7 +113,8 @@ class DrawFlock:
 
 	gluPerspective(45, (display[0]/display[1]), 0.1, 50.0)
 
-	glTranslatef(random.randrange(-5,5),random.randrange(-5,5), -40)
+	glTranslatef(0, 0, -45)
+	glPushMatrix()
 
 	x_move = 0
 	y_move = 0
@@ -127,14 +129,14 @@ class DrawFlock:
 
 		if event.type == pygame.KEYDOWN:
 		    if event.key == pygame.K_LEFT:
-			x_move = 0.3
+			x_move = 3
 		    if event.key == pygame.K_RIGHT:
-			x_move = -0.3
+			x_move = -3
 
 		    if event.key == pygame.K_UP:
-			y_move = -0.3
+			y_move = -3
 		    if event.key == pygame.K_DOWN:
-			y_move = 0.3
+			y_move = 3
 
 
 		if event.type == pygame.KEYUP:
@@ -144,18 +146,23 @@ class DrawFlock:
 		    if event.key == pygame.K_UP or event.key == pygame.K_DOWN:
 			y_move = 0
 
-	    x = glGetDoublev(GL_MODELVIEW_MATRIX)
-
-	    camera_x = x[3][0]
-	    camera_y = x[3][1]
-	    camera_z = x[3][2]
-
 	    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
 
-	    glTranslatef(x_move,y_move,0.0)
-
+	    flock_center = Vector3(0.,0.,0.)
 	    for bat in self.flock:
+		flock_center += bat.center
 		self.__sphere(bat.getCenter(), 0.1, bat.getColor())
+
+	    #flock_center /= len(self.flock)
+	    #glPopMatrix()
+	    #glPushMatrix()
+	    #glTranslatef(flock_center.coords[0],flock_center.coords[1], 0.0)
+	    #x = glGetDoublev(GL_MODELVIEW_MATRIX)
+
+	    #camera_x = x[3][0]
+	    #camera_y = x[3][1]
+	    #camera_z = x[3][2]
+	    #print (camera_x, camera_y, camera_z, flock_center.coords)
 
 	    pygame.display.flip()
 

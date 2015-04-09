@@ -13,8 +13,7 @@ if __name__ == "__main__":
     for i in range(NUM_BATS):
     	x = random.randrange(-10,10)
     	y = random.randrange(-10,10)
-    	z = random.randrange(1,10)
-	b = Bat(x,y,z,random.random(),random.random(),random.random(),random.random(),random.random(),random.random())
+	b = Bat(x,y,5,random.random(),random.random(),0,random.random(),random.random(),random.random())
     	flock.append(b)
 
     # in order to prevent the order of the bats from mattering, updates are all applied at once
