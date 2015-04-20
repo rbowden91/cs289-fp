@@ -1,4 +1,4 @@
-#!/opt/local/bin/python
+#!/opt/local/bin/python2.7
 
 from bat import Bat
 from draw import DrawFlock
