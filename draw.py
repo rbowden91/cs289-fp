@@ -5,7 +5,7 @@ from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-import random
+import random, sys
 from vector import Vector3
 
 class DrawFlock:
@@ -101,7 +101,7 @@ class DrawFlock:
         glBegin(GL_TRIANGLES)
         for face in faces:
             for vertex in face:
-                glColor3fv(color)
+                glColor3fv(color.toList())
                 glVertex3fv((vertices[vertex][0] * radius + center[0], vertices[vertex][1] * radius + center[1], vertices[vertex][2] * radius + center[2]))
         glEnd()
 
@@ -111,15 +111,11 @@ class DrawFlock:
         display = (800,600)
         pygame.display.set_mode(display, DOUBLEBUF|OPENGL)
 
-        gluPerspective(45, (display[0]/display[1]), 0.1, 50.0)
-
-        glTranslatef(0, 0, -45)
-        glPushMatrix()
+        glMatrixMode(GL_PROJECTION);
+        gluPerspective(45, (display[0]/display[1]), 0.1, 100000)
 
         x_move = 0
         y_move = 0
-
-        max_distance = 100
 
         while True:
             for event in pygame.event.get():
@@ -148,21 +144,16 @@ class DrawFlock:
 
             glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
 
+            glMatrixMode(GL_MODELVIEW);
+            glLoadIdentity();
             flock_center = Vector3(0.,0.,0.)
             for bat in self.flock:
                 flock_center += bat.center
-                self.__sphere(bat.getCenter(), 0.1, bat.getColor())
+            flock_center /= len(self.flock)
+            gluLookAt(flock_center[0], flock_center[1], flock_center[2] + 35, flock_center[0], flock_center[1], flock_center[2], 0, 1, 0)
 
-            #flock_center /= len(self.flock)
-            #glPopMatrix()
-            #glPushMatrix()
-            #glTranslatef(flock_center.coords[0],flock_center.coords[1], 0.0)
-            #x = glGetDoublev(GL_MODELVIEW_MATRIX)
-
-            #camera_x = x[3][0]
-            #camera_y = x[3][1]
-            #camera_z = x[3][2]
-            #print (camera_x, camera_y, camera_z, flock_center.coords)
+            for bat in self.flock:
+                self.__sphere(bat.center, 0.1, bat.color)
 
             pygame.display.flip()
 

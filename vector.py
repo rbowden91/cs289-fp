@@ -1,4 +1,9 @@
+import random
+
 class Vector3:
+    @staticmethod
+    def random():
+        return Vector3(random.random(), random.random(), random.random())
 
     def __init__(self, pt1, pt2, pt3):
         self.coords = [pt1, pt2, pt3]
@@ -109,3 +114,11 @@ class Vector3:
 
     def toList(self):
         return self.coords[:]
+
+    def __getitem__(self, idx):
+        assert idx < 3
+        return self.coords[idx]
+
+    def __setitem__(self, idx, value):
+        assert idx < 3
+        self.coords[idx] = value
