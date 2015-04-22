@@ -3,6 +3,8 @@ from vector import Vector3
 
 class Bat:
 
+    MAX_ACCEL = 20
+
     def __init__(self, x=0, y=0, z=0, dx=0, dy=0, dz=0, r=0, g=0, b=0):
         self.center = Vector3(x,y,z)
         self.velocity = Vector3(dx,dy,dz)
@@ -35,10 +37,36 @@ class Bat:
 
         average_velocity /= average_velocity_count
 
+        # acceleration = self.priority_acceleration(get_away, average_velocity, center_vector)
         acceleration = self.weighted_acceleration(get_away, average_velocity, center_vector)
 
         self.updated_velocity = self.velocity + acceleration
         self.updated_velocity.normalize()
+
+    # Static priority: get away, average center, then average velocity
+    def priority_acceleration(self, get_away, average_velocity, center_vector):
+        acceleration = Vector3(0,0,0)
+        acceleration_magnitude = 0
+
+        # Get away
+        acceleration_magnitude += get_away.length()
+        acceleration += get_away
+        if acceleration_magnitude > self.MAX_ACCEL:
+            return acceleration
+
+        # Center
+        acceleration_magnitude += center_vector.length()
+        acceleration += center_vector
+        if acceleration_magnitude > self.MAX_ACCEL:
+            return acceleration
+
+        # Average velocity
+        acceleration_magnitude += average_velocity.length()
+        acceleration += (average_velocity * 100)
+        if acceleration_magnitude > self.MAX_ACCEL:
+            return acceleration
+
+        return acceleration.normalize()
 
     def weighted_acceleration(self, get_away, average_velocity, center_vector):
         acceleration = Vector3(0,0,0)
