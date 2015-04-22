@@ -3,7 +3,7 @@ from vector import Vector3
 
 class Bat:
 
-    MAX_ACCEL = 20
+    MAX_ACCEL = 10
 
     def __init__(self, center, velocity, color):
         self.center = center
@@ -37,8 +37,8 @@ class Bat:
 
         average_velocity /= average_velocity_count
 
-        # acceleration = self.priority_acceleration(get_away, average_velocity, center_vector)
-        acceleration = self.weighted_acceleration(get_away, average_velocity, center_vector)
+        acceleration = self.priority_acceleration(get_away, average_velocity, center_vector)
+        # acceleration = self.weighted_acceleration(get_away, average_velocity, center_vector)
 
         self.updated_velocity = self.velocity + acceleration
         self.updated_velocity.normalize()
@@ -49,21 +49,33 @@ class Bat:
         acceleration_magnitude = 0
 
         # Get away
-        acceleration_magnitude += get_away.length()
-        acceleration += get_away
-        if acceleration_magnitude > self.MAX_ACCEL:
+        if self.MAX_ACCEL > acceleration_magnitude + get_away.length():
+            acceleration_magnitude += get_away.length()
+            acceleration += get_away
+        else:
+            scale = (self.MAX_ACCEL - acceleration_magnitude) / get_away.length()
+            get_away *= scale
+            acceleration += get_away
             return acceleration
 
         # Center
-        acceleration_magnitude += center_vector.length()
-        acceleration += center_vector
-        if acceleration_magnitude > self.MAX_ACCEL:
+        if self.MAX_ACCEL > acceleration_magnitude + center_vector.length():
+            acceleration_magnitude += center_vector.length()
+            acceleration += center_vector
+        else:
+            scale = (self.MAX_ACCEL - acceleration_magnitude) / center_vector.length()
+            center_vector *= scale
+            acceleration += center_vector
             return acceleration
 
-        # Average velocity
-        acceleration_magnitude += average_velocity.length()
-        acceleration += (average_velocity * 100)
-        if acceleration_magnitude > self.MAX_ACCEL:
+        # Average Velocity
+        if self.MAX_ACCEL > acceleration_magnitude + average_velocity.length():
+            acceleration_magnitude += average_velocity.length()
+            acceleration += average_velocity * 100
+        else:
+            scale = (self.MAX_ACCEL - acceleration_magnitude) / average_velocity.length()
+            average_velocity *= scale
+            acceleration += average_velocity * 100
             return acceleration
 
         return acceleration.normalize()
