@@ -1,4 +1,9 @@
+import random
+
 class Vector3:
+    @staticmethod
+    def random():
+        return Vector3(random.random(), random.random(), random.random())
 
     def __init__(self, pt1, pt2, pt3):
         self.coords = [pt1, pt2, pt3]

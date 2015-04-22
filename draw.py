@@ -150,21 +150,11 @@ class DrawFlock:
             for bat in self.flock:
                 flock_center += bat.center
             flock_center /= len(self.flock)
-            gluLookAt(flock_center[0], flock_center[1], 0, flock_center[0], flock_center[1], flock_center[2], 0, 1, 0)
+            gluLookAt(flock_center[0], flock_center[1], flock_center[2] + 35, flock_center[0], flock_center[1], flock_center[2], 0, 1, 0)
             print flock_center.toList()
 
             for bat in self.flock:
                 self.__sphere(bat.center, 0.1, bat.color)
-
-            #glPopMatrix()
-            #glPushMatrix()
-            #glTranslatef(flock_center.coords[0],flock_center.coords[1], 0.0)
-            #x = glGetDoublev(GL_MODELVIEW_MATRIX)
-
-            #camera_x = x[3][0]
-            #camera_y = x[3][1]
-            #camera_z = x[3][2]
-            #print (camera_x, camera_y, camera_z, flock_center.coords)
 
             pygame.display.flip()
 

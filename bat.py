@@ -3,10 +3,10 @@ from vector import Vector3
 
 class Bat:
 
-    def __init__(self, x=0, y=0, z=0, dx=0, dy=0, dz=0, r=0, g=0, b=0):
-        self.center = Vector3(x,y,z)
-        self.velocity = Vector3(dx,dy,dz)
-        self.color = Vector3(r,g,b)
+    def __init__(self, center, velocity, color):
+        self.center = center
+        self.velocity = velocity
+        self.color = color
 
     def prepare_update(self, flock):
         average_center = Vector3(0.,0.,0.)

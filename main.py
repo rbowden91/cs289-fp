@@ -2,7 +2,7 @@
 
 from bat import Bat
 from draw import DrawFlock
-import random
+from vector import Vector3
 
 NUM_BATS = 50
 
@@ -11,9 +11,11 @@ if __name__ == "__main__":
     # create our flock of bats
     flock = []
     for i in range(NUM_BATS):
-        x = random.randrange(-10,10)
-        y = random.randrange(-10,10)
-        b = Bat(x,y,-45,random.random(),random.random(),0,random.random(),random.random(),random.random())
+    	center = Vector3.random() * 10
+    	center[2] -= 30
+    	velocity = Vector3.random()
+    	color = Vector3.random()
+        b = Bat(center, velocity, color)
         flock.append(b)
 
     # in order to prevent the order of the bats from mattering, updates are all applied at once
