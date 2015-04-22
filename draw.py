@@ -13,6 +13,7 @@ class DrawFlock:
     def __init__(self, flock, updater):
         self.flock = flock
         self.update = updater
+        self.following = False
 
     def __sphere(self, center, radius, color):
 
@@ -119,38 +120,26 @@ class DrawFlock:
 
         while True:
             for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    quit()
+            	if event.type == pygame.KEYUP:
+            		if event.key == pygame.K_q:
+            			pygame.quit()
+            			quit()
+            		elif event.key == pygame.K_f:
+            		    self.following = not self.following
 
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_LEFT:
-                        x_move = 3
-                    if event.key == pygame.K_RIGHT:
-                        x_move = -3
-
-                    if event.key == pygame.K_UP:
-                        y_move = -3
-                    if event.key == pygame.K_DOWN:
-                        y_move = 3
-
-
-                if event.type == pygame.KEYUP:
-                    if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
-                        x_move = 0
-
-                    if event.key == pygame.K_UP or event.key == pygame.K_DOWN:
-                        y_move = 0
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    print 'mouse down'
 
             glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
 
-            glMatrixMode(GL_MODELVIEW);
-            glLoadIdentity();
-            flock_center = Vector3(0.,0.,0.)
-            for bat in self.flock:
-                flock_center += bat.center
-            flock_center /= len(self.flock)
-            gluLookAt(flock_center[0], flock_center[1], flock_center[2] + 35, flock_center[0], flock_center[1], flock_center[2], 0, 1, 0)
+            if (self.following):
+                glMatrixMode(GL_MODELVIEW);
+                glLoadIdentity();
+                flock_center = Vector3(0.,0.,0.)
+                for bat in self.flock:
+                    flock_center += bat.center
+                flock_center /= len(self.flock)
+                gluLookAt(flock_center[0], flock_center[1], flock_center[2] + 35, flock_center[0], flock_center[1], flock_center[2], 0, 1, 0)
 
             for bat in self.flock:
                 self.__sphere(bat.center, 0.1, bat.color)
@@ -158,6 +147,6 @@ class DrawFlock:
             pygame.display.flip()
 
             self.update()
-            pygame.time.wait(100)
+            pygame.time.wait(10)
         pygame.quit()
         quit()
