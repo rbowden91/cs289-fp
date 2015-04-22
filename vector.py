@@ -109,3 +109,11 @@ class Vector3:
 
     def toList(self):
         return self.coords[:]
+
+    def __getitem__(self, idx):
+        assert idx < 3
+        return self.coords[idx]
+
+    def __setitem__(self, idx, value):
+        assert idx < 3
+        self.coords[idx] = value

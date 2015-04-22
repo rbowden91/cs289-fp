@@ -50,12 +50,3 @@ class Bat:
     def apply_update(self):
         self.center += self.velocity
         self.velocity = self.updated_velocity
-
-    def getCenter(self):
-        return self.center.toList()
-
-    def getColor(self):
-        return self.color.toList()
-
-    def getVelocity(self):
-        return self.velocity.toList()
