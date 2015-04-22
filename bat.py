@@ -35,6 +35,12 @@ class Bat:
 
         average_velocity /= average_velocity_count
 
+        acceleration = self.weighted_acceleration(get_away, average_velocity, center_vector)
+
+        self.updated_velocity = self.velocity + acceleration
+        self.updated_velocity.normalize()
+
+    def weighted_acceleration(self, get_away, average_velocity, center_vector):
         acceleration = Vector3(0,0,0)
         if get_away.length() != 0:
             acceleration += get_away.normalize() * 5
@@ -43,9 +49,8 @@ class Bat:
         if center_vector.length() != 0:
             acceleration += center_vector.normalize() * 5
         acceleration = acceleration.normalize() * .5
+        return acceleration
 
-        self.updated_velocity = self.velocity + acceleration
-        self.updated_velocity.normalize()
 
     def apply_update(self):
         self.center += self.velocity
