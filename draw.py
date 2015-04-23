@@ -1,4 +1,7 @@
 #!/opt/local/bin/python
+
+# for arcball mouse rotation, see http://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Arcball
+
 import pygame
 from pygame.locals import *
 
@@ -10,12 +13,23 @@ from vector import Vector3
 
 class DrawFlock:
 
+
     def __init__(self, flock, updater):
         self.flock = flock
         self.update = updater
         self.following = False
+        self.rotating = False
+        self.display = None
+        self.prev_mouse = None
+        self.current_up = (0, 1, 0)
 
-    def __sphere(self, center, radius, color):
+    def get_arcball_vector(x, y):
+        P = Vector3(x / self.display[0] * 2 - 1, y / self.display[1] * 2 - 1, 0)
+
+        P[1] = -P[1]
+        d = P[0] * P[0] + P[1] * P[1]
+
+    def __sphere(self, center, radius, color, solid=True, limit=0):
 
         # based on http://blog.andreaskahler.com/2009/06/creating-icosphere-mesh-in-code.html
         t = (1. + 5. ** .5) / 2.
@@ -84,7 +98,7 @@ class DrawFlock:
             return len(vertices) - 1;
 
 
-        for i in range(0):
+        for i in range(limit):
             faces2 = []
             for f in faces:
                 a = getMiddlePoint(vertices[f[0]], vertices[f[1]]);
@@ -98,27 +112,51 @@ class DrawFlock:
             faces = faces2;
 
 
+        def drawVertex(vertex):
+            glColor3fv(color.toList())
+            glVertex3fv((vertices[vertex][0] * radius + center[0], vertices[vertex][1] * radius + center[1], vertices[vertex][2] * radius + center[2]))
 
-        glBegin(GL_TRIANGLES)
-        for face in faces:
-            for vertex in face:
-                glColor3fv(color.toList())
-                glVertex3fv((vertices[vertex][0] * radius + center[0], vertices[vertex][1] * radius + center[1], vertices[vertex][2] * radius + center[2]))
+
+        if solid:
+            glBegin(GL_TRIANGLES)
+            for face in faces:
+                for vertex in face:
+                	drawVertex(vertex)
+        else:
+        	glBegin(GL_LINES)
+        	for face in faces:
+        		drawVertex(face[0])
+        		drawVertex(face[1])
+        		drawVertex(face[1])
+        		drawVertex(face[2])
+        		drawVertex(face[2])
+        		drawVertex(face[0])
         glEnd()
 
 
     def main(self):
         pygame.init()
-        display = (800,600)
-        pygame.display.set_mode(display, DOUBLEBUF|OPENGL)
+        self.display = (800,600)
+        pygame.display.set_mode(self.display, DOUBLEBUF|OPENGL)
 
         glMatrixMode(GL_PROJECTION);
-        gluPerspective(45, (display[0]/display[1]), 0.1, 100000)
-
-        x_move = 0
-        y_move = 0
+        gluPerspective(45, (self.display[0]/self.display[1]), 0.1, 100000)
 
         while True:
+            #if self.rotating:
+            #    model = glGetDoublev(GL_MODELVIEW_MATRIX)
+            #    view = glGetIntegerv(GL_VIEWPORT)
+            #    projection = glGetDoublev(GL_PROJECTION_MATRIX)
+
+            #	world_point = gluUnProject(self.prev_mouse[0], self.prev_mouse[1], 0, model, projection, view)
+            #	if (world_point[0]
+            #	ball_point = 
+
+            #    x, y = pygame.mouse.get_pos()
+
+            #    #get_arcball_vector(
+            #    self.current_up[0]
+
             for event in pygame.event.get():
             	if event.type == pygame.KEYUP:
             		if event.key == pygame.K_q:
@@ -128,18 +166,27 @@ class DrawFlock:
             		    self.following = not self.following
 
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    print 'mouse down'
+                    self.prev_mouse = pygame.mouse.get_pos()
+                    self.rotating = True
+                    pygame.mouse.set_visible(False)
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    self.prev_mouse = None
+                    self.rotating = False
+                    pygame.mouse.set_visible(True)
 
             glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
 
-            if (self.following):
+            flock_center = Vector3(0.,0.,0.)
+            for bat in self.flock:
+                flock_center += bat.center
+            flock_center /= len(self.flock)
+
+            if self.following:
                 glMatrixMode(GL_MODELVIEW);
                 glLoadIdentity();
-                flock_center = Vector3(0.,0.,0.)
-                for bat in self.flock:
-                    flock_center += bat.center
-                flock_center /= len(self.flock)
-                gluLookAt(flock_center[0], flock_center[1], flock_center[2] + 35, flock_center[0], flock_center[1], flock_center[2], 0, 1, 0)
+                gluLookAt(flock_center[0], flock_center[1], flock_center[2] + 35, flock_center[0], flock_center[1], flock_center[2], self.current_up[0], self.current_up[1], self.current_up[0])
+
+            #self.__sphere(flock_center, 1, Vector3(0.,1.,0.), False, 1)
 
             for bat in self.flock:
                 self.__sphere(bat.center, 0.1, bat.color)
