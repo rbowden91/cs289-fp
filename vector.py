@@ -122,3 +122,14 @@ class Vector3:
     def __setitem__(self, idx, value):
         assert idx < 3
         self.coords[idx] = value
+
+    def dot(self, other):
+        tmp = 0
+        for i in range(3):
+        	tmp += self.coords[i] * other.coords[i]
+        return tmp
+
+    def cross(self, other):
+        return Vector3(self.coords[2] * other.coords[3] - self.coords[3] * other.coords[2],
+            self.coords[3] * other.coords[1] - self.coords[1] * other.coords[3],
+            self.coords[1] * other.coords[2] - self.coords[2] * other.coords[1])
