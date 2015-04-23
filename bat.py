@@ -1,5 +1,6 @@
 import sys
 from vector import Vector3
+from math import acos
 
 class Bat:
 
@@ -9,6 +10,10 @@ class Bat:
         self.center = center
         self.velocity = velocity
         self.color = color
+
+    def angle(self, other):
+        p = other.center - self.center
+        return acos(self.velocity.dot(p) / (p.length() * self.velocity.length()))
 
     def prepare_update(self, flock):
         average_center = Vector3(0.,0.,0.)
