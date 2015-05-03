@@ -1,6 +1,6 @@
 import sys
 from vector import Vector3
-from math import acos
+from math import acos, pi
 
 class Bat:
 
@@ -26,15 +26,18 @@ class Bat:
             if f == self:
                 continue
             d = self.center.distance(f.center)
-            # necessary?
+
+            # if the birds somehow end up on top of one another, ignore
             if d == 0:
-                d = 0.1
+            	continue
+
+            angle_factor = (1. - self.angle(f) / (2. * pi))
             if d < 5.0:
-                get_away += (self.center - f.center) / (d ** 2.)
+                get_away += angle_factor (self.center - f.center) / (d ** 2.)
             if d < 20.0:
-                average_center += f.center
+                average_center += angle_factor * f.center
                 average_center_count += 1
-            average_velocity += f.velocity / (d ** 2.)
+            average_velocity += angle_factor *  f.velocity / (d ** 2.)
             average_velocity_count += 1
 
         average_center /= average_center_count
