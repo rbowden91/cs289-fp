@@ -1,16 +1,13 @@
 #!/opt/local/bin/python
 
-# for arcball mouse rotation, see http://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Arcball
-
 import pygame
 from pygame.locals import *
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-import random, sys
 from vector import Vector3
-from math import acos, cos, sin
+from math import pi
 from sphere import draw_sphere
 import arcball
 
@@ -26,8 +23,8 @@ class DrawFlock:
         self.display = None
         self.mouse_prev = None
         self.current_up = (0, 1, 0)
-        self.arcball_quaternion = [0,0,0,1]
-        self.arcball_center = Vector3(0,0,0)
+        self.camera_center = Vector3(0,0,-200)
+        self.quaternion = (1, Vector3(0,0,0))
 
     def main(self):
         pygame.init()
@@ -37,25 +34,8 @@ class DrawFlock:
         glMatrixMode(GL_PROJECTION);
         gluPerspective(self.FOV, (self.display[0]/self.display[1]), 0.1, 100000)
 
+        glMatrixMode(GL_MODELVIEW)
         while True:
-            # see http://rainwarrior.ca/dragon/arcball.html
-            if self.rotating:
-            	pass
-            	#mouse_prev = self.get_arcball_point(self.mouse_prev[0], self.mouse_prev[1]).normalize()
-
-                #x, y = pygame.mouse.get_pos()
-                #new_point = self.get_arcball_point(x, y).normalize()
-                #axis_of_rotation = mouse_prev.cross(new_point)
-                #angle_of_rotation = acos(min(mouse_prev.dot(new_point), 1))
-
-                ## transform this into a quaternian
-                #axis_of_rotation *= sin(.5 * angle_of_rotation)
-                #quaternion = axis_of_rotation.toList()
-                #quaternion.append(cos(.5 * angle_of_rotation))
-
-                #for i in range(4):
-                #    self.arcball_quaternion[i] += quaternion[i]
-                #self.mouse_prev = (x, y)
 
             for event in pygame.event.get():
             	if event.type == pygame.KEYUP:
@@ -80,48 +60,39 @@ class DrawFlock:
             for bat in self.flock:
                 flock_center += bat.center
             flock_center /= len(self.flock)
-            self.arcball_center = flock_center
+
+            glLoadIdentity()
 
             if self.following:
-                glMatrixMode(GL_MODELVIEW);
-                glLoadIdentity();
-                gluLookAt(flock_center[0], flock_center[1], flock_center[2] + 35, flock_center[0], flock_center[1], flock_center[2], self.current_up[0], self.current_up[1], self.current_up[0])
+            	self.camera_center = [-x for x in flock_center.toList()]
+            	self.camera_center[2] -= 200
 
-                (x,y,z,w) = self.arcball_quaternion
-                rotation_matrix = [
-                    [
-                        w ** 2 + x ** 2 - y ** 2 - z ** 2,
-                        2 * x * y + 2 * w * z,
-                        2 * x * z - 2 * w * y,
-                        0
-                    ],
-                    [
-                        2 * x * y - 2 * w * z,
-                        w ** 2 - x ** 2 + y ** 2 - z ** 2,
-                        2 * y * z + 2 * w * x,
-                        0
-                    ],
-                    [
-                        2 * x * z + 2 * w * y,
-                        2 * y * z - 2 * w * x,
-                        w ** 2 - x ** 2 - y ** 2 + z ** 2,
-                        0
-                    ],
-                    [
-                        0,
-                        0,
-                        0,
-                        w ** 2 + x ** 2 + y ** 2 + z ** 2
-                    ]
-                ]
-                glMultMatrixf(rotation_matrix)
+            # arcball stuff
+            if self.following:
+            	if self.rotating:
+                    pos = pygame.mouse.get_pos()
+                    self.quaternion = arcball.get_arcball_quaternion(flock_center, self.mouse_prev, pos, self.display[1], self.quaternion)
+                    self.mouse_prev = pos
 
+                glPushMatrix()
+                glTranslate(self.camera_center[0], self.camera_center[1], self.camera_center[2])
 
-            # draw the arcball
-            arcball.draw_arcball(flock_center, self.FOV, self.display[1])
+                glTranslate(flock_center[0], flock_center[1], flock_center[2])
+                arcball.rotateQuat(self.quaternion)
+                arcball.draw_arcball(flock_center, self.FOV, self.camera_center[2], self.display[1])
+                glPopMatrix()
+
+            #glTranslate(flock_center[0], flock_center[1], flock_center[2])
+            #glRotatef(self.quaternion[0] * 180 / pi, self.quaternion[1][0], self.quaternion[1][1], self.quaternion[1][2])
 
             for bat in self.flock:
-                draw_sphere(bat.center, .5, bat.color)
+            	glPushMatrix()
+            	glTranslate(self.camera_center[0], self.camera_center[1], self.camera_center[2])
+            	glTranslate(flock_center[0], flock_center[1], flock_center[2])
+                arcball.rotateQuat(self.quaternion)
+            	glTranslate(bat.center[0] - flock_center[0], bat.center[1] - flock_center[1], bat.center[2] - flock_center[2])
+                draw_sphere(1, bat.color)
+                glPopMatrix()
 
             pygame.display.flip()
 

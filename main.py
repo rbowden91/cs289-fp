@@ -11,8 +11,7 @@ if __name__ == "__main__":
     # create our flock of bats
     flock = []
     for i in range(NUM_BATS):
-    	center = Vector3.random() * 10
-    	center[2] -= 45
+    	center = Vector3.random() * 50
     	velocity = Vector3.random() * 2
     	color = Vector3.random()
         b = Bat(center, velocity, color)

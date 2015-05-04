@@ -2,7 +2,7 @@ from OpenGL.GL import *
 from vector import Vector3
 
 # based on http://blog.andreaskahler.com/2009/06/creating-icosphere-mesh-in-code.html
-def draw_sphere(center, radius, color, solid=True, limit=0):
+def draw_sphere(radius, color, solid=True, limit=0):
     t = (1. + 5. ** .5) / 2.
 
     vertices = [
@@ -88,7 +88,7 @@ def draw_sphere(center, radius, color, solid=True, limit=0):
 
     def drawVertex(vertex):
         glColor3fv(color.toList())
-        glVertex3fv((vertices[vertex][0] * radius + center[0], vertices[vertex][1] * radius + center[1], vertices[vertex][2] * radius + center[2]))
+        glVertex3fv(vertices[vertex].toList())
 
 
     if solid:
