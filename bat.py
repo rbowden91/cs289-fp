@@ -4,7 +4,10 @@ from math import acos, pi
 
 class Bat:
 
-    MAX_ACCEL = 10
+    MAX_ACCEL = 1
+    VELOCITY_RADIUS = 20
+    CENTER_RADIUS = 20
+    GET_AWAY_RADIUS = 5
 
     def __init__(self, center, velocity, color):
         self.center = center
@@ -27,26 +30,30 @@ class Bat:
                 continue
             d = self.center.distance(f.center)
 
-            # if the birds somehow end up on top of one another, ignore
+            # if the bats somehow occupy same point in space, ignore
             if d == 0:
             	continue
 
-            angle_factor = (1. - self.angle(f) / (2. * pi))
-            if d < 5.0:
-                get_away += angle_factor (self.center - f.center) / (d ** 2.)
-            if d < 20.0:
-                average_center += angle_factor * f.center
+            angle_factor = 1#(1. - self.angle(f) / (2. * pi))
+            if d < self.GET_AWAY_RADIUS:
+                get_away += (self.center - f.center) / (d ** 2.) * angle_factor
+            if d < self.CENTER_RADIUS:
+                average_center += f.center * angle_factor
                 average_center_count += 1
-            average_velocity += angle_factor *  f.velocity / (d ** 2.)
-            average_velocity_count += 1
+            if d < self.VELOCITY_RADIUS:
+                average_velocity += f.velocity / (d ** 2.) * angle_factor
+                average_velocity_count += 1
 
-        average_center /= average_center_count
+        # in case no other bats are around
+        if average_center_count > 0:
+            average_center /= average_center_count
         center_vector = average_center - self.center
 
-        average_velocity /= average_velocity_count
+        if average_velocity_count > 0:
+            average_velocity /= average_velocity_count
 
-        acceleration = self.priority_acceleration(get_away, average_velocity, center_vector)
-        # acceleration = self.weighted_acceleration(get_away, average_velocity, center_vector)
+        # acceleration = self.priority_acceleration(get_away, average_velocity, center_vector)
+        acceleration = self.weighted_acceleration(get_away, average_velocity, center_vector)
 
         self.updated_velocity = self.velocity + acceleration
         self.updated_velocity.normalize()
@@ -56,47 +63,26 @@ class Bat:
         acceleration = Vector3(0,0,0)
         acceleration_magnitude = 0
 
-        # Get away
-        if self.MAX_ACCEL > acceleration_magnitude + get_away.length():
-            acceleration_magnitude += get_away.length()
-            acceleration += get_away
-        else:
-            scale = (self.MAX_ACCEL - acceleration_magnitude) / get_away.length()
-            get_away *= scale
-            acceleration += get_away
-            return acceleration
-
-        # Center
-        if self.MAX_ACCEL > acceleration_magnitude + center_vector.length():
-            acceleration_magnitude += center_vector.length()
-            acceleration += center_vector
-        else:
-            scale = (self.MAX_ACCEL - acceleration_magnitude) / center_vector.length()
-            center_vector *= scale
-            acceleration += center_vector
-            return acceleration
-
-        # Average Velocity
-        if self.MAX_ACCEL > acceleration_magnitude + average_velocity.length():
-            acceleration_magnitude += average_velocity.length()
-            acceleration += average_velocity * 100
-        else:
-            scale = (self.MAX_ACCEL - acceleration_magnitude) / average_velocity.length()
-            average_velocity *= scale
-            acceleration += average_velocity * 100
-            return acceleration
-
-        return acceleration.normalize()
+        for vector in [get_away, center_vector, average_velocity * 100]:
+            if self.MAX_ACCEL > acceleration_magnitude + vector.length():
+                acceleration_magnitude += vector.length()
+                acceleration += vector
+            else:
+                scale = (self.MAX_ACCEL - acceleration_magnitude) / vector.length()
+                vector *= scale
+                acceleration += vector
+                break
+        return acceleration
 
     def weighted_acceleration(self, get_away, average_velocity, center_vector):
         acceleration = Vector3(0,0,0)
         if get_away.length() != 0:
-            acceleration += get_away.normalize() * 5
+            acceleration += get_away.normalize() * 10
         if average_velocity.length() != 0:
-            acceleration += average_velocity.normalize() * 8
+            acceleration += average_velocity.normalize() * 5
         if center_vector.length() != 0:
-            acceleration += center_vector.normalize() * 5
-        acceleration = acceleration.normalize() * .5
+            acceleration += center_vector.normalize() * 8
+        acceleration = acceleration.normalize() * .1
         return acceleration
 
 

@@ -10,9 +10,13 @@ from OpenGL.GLU import *
 
 import random, sys
 from vector import Vector3
+from math import acos, cos, sin
+from sphere import draw_sphere
+import arcball
 
 class DrawFlock:
 
+    FOV = 45
 
     def __init__(self, flock, updater):
         self.flock = flock
@@ -20,142 +24,38 @@ class DrawFlock:
         self.following = False
         self.rotating = False
         self.display = None
-        self.prev_mouse = None
+        self.mouse_prev = None
         self.current_up = (0, 1, 0)
-
-    def get_arcball_vector(x, y):
-        P = Vector3(x / self.display[0] * 2 - 1, y / self.display[1] * 2 - 1, 0)
-
-        P[1] = -P[1]
-        d = P[0] * P[0] + P[1] * P[1]
-
-    def __sphere(self, center, radius, color, solid=True, limit=0):
-
-        # based on http://blog.andreaskahler.com/2009/06/creating-icosphere-mesh-in-code.html
-        t = (1. + 5. ** .5) / 2.
-
-        vertices = [
-            (-1,  t,  0),
-            ( 1,  t,  0),
-            (-1, -t,  0),
-            ( 1, -t,  0),
-
-            ( 0, -1,  t),
-            ( 0,  1,  t),
-            ( 0, -1, -t),
-            ( 0,  1, -t),
-
-            ( t,  0, -1),
-            ( t,  0,  1),
-            (-t,  0, -1),
-            (-t,  0,  1),
-        ]
-
-        faces = [
-            (0, 11, 5),
-            (0, 5, 1),
-            (0, 1, 7),
-            (0, 7, 10),
-            (0, 10, 11),
-            (1, 5, 9),
-            (5, 11, 4),
-            (11, 10, 2),
-            (10, 7, 6),
-            (7, 1, 8),
-            (3, 9, 4),
-            (3, 4, 2),
-            (3, 2, 6),
-            (3, 6, 8),
-            (3, 8, 9),
-            (4, 9, 5),
-            (2, 4, 11),
-            (6, 2, 10),
-            (8, 6, 7),
-            (9, 8, 1)
-        ]
-
-
-        # return index of point in the middle of p1 and p2
-        point_cache = {}
-        def getMiddlePoint(p1, p2):
-            # first check if we have it already
-            if (p1 in point_cache and p2 in point_cache[p1]):
-                return point_cache[p1][p2]
-            elif (p2 in point_cache and p1 in point_cache[p2]):
-                return point_cache[p2][p1]
-
-            middle = (
-                (p1[0] + p2[0]) / 2.0,
-                (p1[1] + p2[1]) / 2.0,
-                (p1[2] + p2[2]) / 2.0
-            )
-            vertices.append(middle)
-            if p1 not in point_cache:
-                point_cache[p1] = {}
-            point_cache[p1][p2] = len(vertices) - 1
-
-
-            return len(vertices) - 1;
-
-
-        for i in range(limit):
-            faces2 = []
-            for f in faces:
-                a = getMiddlePoint(vertices[f[0]], vertices[f[1]]);
-                b = getMiddlePoint(vertices[f[1]], vertices[f[2]]);
-                c = getMiddlePoint(vertices[f[2]], vertices[f[0]]);
-
-                faces2.append((f[0], a, c));
-                faces2.append((f[1], b, a));
-                faces2.append((f[2], c, b));
-                faces2.append((a, b, c));
-            faces = faces2;
-
-
-        def drawVertex(vertex):
-            glColor3fv(color.toList())
-            glVertex3fv((vertices[vertex][0] * radius + center[0], vertices[vertex][1] * radius + center[1], vertices[vertex][2] * radius + center[2]))
-
-
-        if solid:
-            glBegin(GL_TRIANGLES)
-            for face in faces:
-                for vertex in face:
-                	drawVertex(vertex)
-        else:
-        	glBegin(GL_LINES)
-        	for face in faces:
-        		drawVertex(face[0])
-        		drawVertex(face[1])
-        		drawVertex(face[1])
-        		drawVertex(face[2])
-        		drawVertex(face[2])
-        		drawVertex(face[0])
-        glEnd()
-
+        self.arcball_quaternion = [0,0,0,1]
+        self.arcball_center = Vector3(0,0,0)
 
     def main(self):
         pygame.init()
-        self.display = (800,600)
+        self.display = (800,800)
         pygame.display.set_mode(self.display, DOUBLEBUF|OPENGL)
 
         glMatrixMode(GL_PROJECTION);
-        gluPerspective(45, (self.display[0]/self.display[1]), 0.1, 100000)
+        gluPerspective(self.FOV, (self.display[0]/self.display[1]), 0.1, 100000)
 
         while True:
-            #if self.rotating:
-            #    model = glGetDoublev(GL_MODELVIEW_MATRIX)
-            #    view = glGetIntegerv(GL_VIEWPORT)
-            #    projection = glGetDoublev(GL_PROJECTION_MATRIX)
+            # see http://rainwarrior.ca/dragon/arcball.html
+            if self.rotating:
+            	pass
+            	#mouse_prev = self.get_arcball_point(self.mouse_prev[0], self.mouse_prev[1]).normalize()
 
-            #	world_point = gluUnProject(self.prev_mouse[0], self.prev_mouse[1], 0, model, projection, view)
-            #	if (world_point[0]
-            #	ball_point = 
+                #x, y = pygame.mouse.get_pos()
+                #new_point = self.get_arcball_point(x, y).normalize()
+                #axis_of_rotation = mouse_prev.cross(new_point)
+                #angle_of_rotation = acos(min(mouse_prev.dot(new_point), 1))
 
-            #    x, y = pygame.mouse.get_pos()
+                ## transform this into a quaternian
+                #axis_of_rotation *= sin(.5 * angle_of_rotation)
+                #quaternion = axis_of_rotation.toList()
+                #quaternion.append(cos(.5 * angle_of_rotation))
 
-            #    #get_arcball_vector(
-            #    self.current_up[0]
+                #for i in range(4):
+                #    self.arcball_quaternion[i] += quaternion[i]
+                #self.mouse_prev = (x, y)
 
             for event in pygame.event.get():
             	if event.type == pygame.KEYUP:
@@ -166,11 +66,11 @@ class DrawFlock:
             		    self.following = not self.following
 
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    self.prev_mouse = pygame.mouse.get_pos()
+                    self.mouse_prev = pygame.mouse.get_pos()
                     self.rotating = True
                     pygame.mouse.set_visible(False)
                 elif event.type == pygame.MOUSEBUTTONUP:
-                    self.prev_mouse = None
+                    self.mouse_prev = None
                     self.rotating = False
                     pygame.mouse.set_visible(True)
 
@@ -180,16 +80,48 @@ class DrawFlock:
             for bat in self.flock:
                 flock_center += bat.center
             flock_center /= len(self.flock)
+            self.arcball_center = flock_center
 
             if self.following:
                 glMatrixMode(GL_MODELVIEW);
                 glLoadIdentity();
                 gluLookAt(flock_center[0], flock_center[1], flock_center[2] + 35, flock_center[0], flock_center[1], flock_center[2], self.current_up[0], self.current_up[1], self.current_up[0])
 
-            #self.__sphere(flock_center, 1, Vector3(0.,1.,0.), False, 1)
+                (x,y,z,w) = self.arcball_quaternion
+                rotation_matrix = [
+                    [
+                        w ** 2 + x ** 2 - y ** 2 - z ** 2,
+                        2 * x * y + 2 * w * z,
+                        2 * x * z - 2 * w * y,
+                        0
+                    ],
+                    [
+                        2 * x * y - 2 * w * z,
+                        w ** 2 - x ** 2 + y ** 2 - z ** 2,
+                        2 * y * z + 2 * w * x,
+                        0
+                    ],
+                    [
+                        2 * x * z + 2 * w * y,
+                        2 * y * z - 2 * w * x,
+                        w ** 2 - x ** 2 - y ** 2 + z ** 2,
+                        0
+                    ],
+                    [
+                        0,
+                        0,
+                        0,
+                        w ** 2 + x ** 2 + y ** 2 + z ** 2
+                    ]
+                ]
+                glMultMatrixf(rotation_matrix)
+
+
+            # draw the arcball
+            arcball.draw_arcball(flock_center, self.FOV, self.display[1])
 
             for bat in self.flock:
-                self.__sphere(bat.center, 0.1, bat.color)
+                draw_sphere(bat.center, .5, bat.color)
 
             pygame.display.flip()
 
