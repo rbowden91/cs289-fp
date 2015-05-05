@@ -1,8 +1,12 @@
 from OpenGL.GL import *
 from vector import Vector3
+import json
 
 # based on http://blog.andreaskahler.com/2009/06/creating-icosphere-mesh-in-code.html
-def draw_sphere(radius, color, solid=True, limit=0):
+
+geometries = {}
+
+def calculate_geometry(limit):
     t = (1. + 5. ** .5) / 2.
 
     vertices = [
@@ -46,7 +50,7 @@ def draw_sphere(radius, color, solid=True, limit=0):
     ]
 
     for i in range(len(vertices)):
-    	vertices[i] = vertices[i].normalize() * radius
+    	vertices[i] = vertices[i].normalize()# * radius
 
     # return index of point in the middle of p1 and p2
     point_cache = {}
@@ -63,7 +67,7 @@ def draw_sphere(radius, color, solid=True, limit=0):
             (p1[2] + p2[2]) / 2.0
         )
 
-        middle = middle.normalize() * radius
+        middle = middle.normalize()# * radius
         vertices.append(middle)
         if p1 not in point_cache:
             point_cache[p1] = {}
@@ -86,9 +90,29 @@ def draw_sphere(radius, color, solid=True, limit=0):
             faces2.append((a, b, c));
         faces = faces2;
 
+    dictionary = {
+    	'faces' : faces,
+    	'vertices' : [vertex.toList() for vertex in vertices]
+    }
+    with open('spheres' + str(limit) + '.json', 'w') as outfile:
+        json.dump(dictionary, outfile)
+    return dictionary
+
+def draw_sphere(radius, color, solid=True, limit=0):
+    if limit not in geometries:
+        try:
+            with open('spheres' + str(limit) + '.json', 'w') as outfile:
+                dictionary = json.load(outfile)
+        except IOError:
+            dictionary = calculate_geometry(limit)
+        geometries[limit] = dictionary
+
+    vertices = geometries[limit]['vertices']
+    faces = geometries[limit]['faces']
+
     def drawVertex(vertex):
         glColor3fv(color.toList())
-        glVertex3fv(vertices[vertex].toList())
+        glVertex3fv([i * radius for i in vertices[vertex]])
 
 
     if solid:

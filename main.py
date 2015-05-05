@@ -4,7 +4,7 @@ from bat import Bat
 from draw import DrawFlock
 from vector import Vector3
 
-NUM_BATS = 50
+NUM_BATS = 25
 
 if __name__ == "__main__":
 
