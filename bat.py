@@ -6,7 +6,7 @@ from random import randint
 class Bat:
 
     MAX_ACCEL = .1
-    MAX_VELOCITY = 1
+    MAX_VELOCITY = 3
 
     def __init__(self, center, velocity):
         self.center = center
@@ -21,24 +21,24 @@ class Bat:
         accelerations = {
             'center' : {
             	'vector' : Vector3(0.,0.,0.),
-                'radius' : 40,
+                'radius' : 100,
                 'count' : 0,
-                'weight' : 10,
+                'weight' : 5,
                 'update': lambda self, other, d, angle_factor: (other.center - self.center) / (d ** 2.) * angle_factor
             },
             'get_away' : {
             	'vector' : Vector3(0.,0.,0.),
-                'radius' : 20,
+                'radius' : 0,
                 'count' : 0,
-                'weight' : 12,
+                'weight' : 8,
                 'update': lambda self, other, d, angle_factor: (self.center - other.center) / (d ** 2.) * angle_factor
             },
             'velocity' : {
             	'vector' : Vector3(0.,0.,0.),
-                'radius' : 40,
+                'radius' : 100,
                 'count' : 0,
-                'weight' : 8,
-                'update': lambda self, other, d, angle_factor: (other.velocity - self.velocity) / (d ** 2.) * angle_factor
+                'weight' : 4,
+                'update': lambda self, other, d, angle_factor: (other.velocity - self.velocity) / (d ** 2.) * angle_factor ** 0.
             }
         }
 
@@ -51,8 +51,7 @@ class Bat:
             if d == 0:
             	continue
 
-            # increasing the power increases angle dependence
-            angle_factor = (1. - self.angle(f) / (2. * pi)) ** 2.
+            angle_factor = (1. - self.angle(f) / (2. * pi))
 
             for a in accelerations:
                 if d < accelerations[a]['radius']:
@@ -108,9 +107,10 @@ class Bat:
         acceleration = Vector3(0,0,0)
 
         for a in accelerations:
-            if accelerations[a]['vector'].length() != 0:
-                acceleration += accelerations[a]['vector'].normalize() * accelerations[a]['weight']
+            #print accelerations[a]['vector'].coords
+            acceleration += accelerations[a]['vector'] * accelerations[a]['weight']
 
+        #acceleration += Vector3.random() * .5
         if acceleration.length() != 0 and acceleration.length() > self.MAX_ACCEL:
             acceleration = acceleration.normalize() * self.MAX_ACCEL
 
