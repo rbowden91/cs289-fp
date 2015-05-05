@@ -5,8 +5,8 @@ from math import acos, pi
 class Bat:
 
     MAX_ACCEL = 1
-    VELOCITY_RADIUS = 20
-    CENTER_RADIUS = 20
+    VELOCITY_RADIUS = 40
+    CENTER_RADIUS = 40
     GET_AWAY_RADIUS = 5
 
     def __init__(self, center, velocity, color):
@@ -34,7 +34,7 @@ class Bat:
             if d == 0:
             	continue
 
-            angle_factor = 1#(1. - self.angle(f) / (2. * pi))
+            angle_factor = (1. - self.angle(f) / (2. * pi))
             if d < self.GET_AWAY_RADIUS:
                 get_away += (self.center - f.center) / (d ** 2.) * angle_factor
             if d < self.CENTER_RADIUS:
