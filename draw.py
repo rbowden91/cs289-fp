@@ -9,14 +9,16 @@ from OpenGL.GLU import *
 from vector import Vector3
 from math import pi
 from sphere import draw_sphere
+from food import Food
 import arcball
 
 class DrawFlock:
 
     FOV = 45
 
-    def __init__(self, flock, updater):
+    def __init__(self, flock, env, updater):
         self.flock = flock
+        self.env = env
         self.update = updater
         self.following = False
         self.rotating = False
@@ -35,8 +37,14 @@ class DrawFlock:
         gluPerspective(self.FOV, (self.display[0]/self.display[1]), 0.1, 100000)
 
         glMatrixMode(GL_MODELVIEW)
+
+        # main drawing loop
         while True:
 
+            # set to true if `p` key is pressed
+            generate_food = False
+
+            # handle mouse and keyboard events
             for event in pygame.event.get():
             	if event.type == pygame.KEYUP:
             		if event.key == pygame.K_q:
@@ -48,6 +56,8 @@ class DrawFlock:
             		    self.zoom -= 10
             		elif event.key == pygame.K_x:
             		    self.zoom += 10
+            		elif event.key == pygame.K_p:
+            		    generate_food = True
 
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     self.mouse_prev = pygame.mouse.get_pos()
@@ -94,17 +104,33 @@ class DrawFlock:
                 glPopMatrix()
 
             glTranslate(camera_center[0], camera_center[1], camera_center[2])
+
+            glPushMatrix()
             glTranslate(flock_center[0], flock_center[1], flock_center[2])
             arcball.rotateQuat(self.quaternion)
 
             for bat in self.flock:
-                glPushMatrix()
+            	glPushMatrix()
+                # XXX does this make sense when no longer following?
             	glTranslate(bat.center[0] - flock_center[0], bat.center[1] - flock_center[1], bat.center[2] - flock_center[2])
                 draw_sphere(1, bat.color)
                 glPopMatrix()
+            glPopMatrix()
+
+            for food in self.env:
+            	glPushMatrix()
+            	glTranslate(food.center[0], food.center[1], food.center[2])
+            	draw_sphere(1, food.color)
+            	glPopMatrix()
 
             if new_quaternion is not None:
             	self.quaternion = new_quaternion
+
+            # XXX food doesn't work when rotating
+            if generate_food:
+            	food_center = Vector3.random() * 50
+                food_center += flock_center
+            	self.env.append(Food(food_center))
 
             pygame.display.flip()
 

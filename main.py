@@ -13,17 +13,19 @@ if __name__ == "__main__":
     for i in range(NUM_BATS):
     	center = Vector3.random() * 50
     	velocity = Vector3.random() * 2
-    	color = Vector3.random()
-        b = Bat(center, velocity, color)
+        b = Bat(center, velocity)
         flock.append(b)
+
+    # environment, potentially including food and predators
+    env = []
 
     # in order to prevent the order of the bats from mattering, updates are all applied at once
     def update():
         for f in flock:
-            f.prepare_update(flock)
+            f.prepare_update(flock, env)
         for f in flock:
             f.apply_update()
 
     # draw our flock
-    df = DrawFlock(flock, update)
+    df = DrawFlock(flock, env, update)
     df.main()

@@ -107,12 +107,14 @@ def draw_sphere(radius, color, solid=True, limit=0):
             dictionary = calculate_geometry(limit)
         geometries[limit] = dictionary
 
-    vertices = geometries[limit]['vertices']
+    vertices = []
+    for i in geometries[limit]['vertices']:
+    	vertices.append([j * radius for j in i])
     faces = geometries[limit]['faces']
 
     def drawVertex(vertex):
         glColor3fv(color.toList())
-        glVertex3fv([i * radius for i in vertices[vertex]])
+        glVertex3fv(vertices[vertex])
 
 
     if solid:

@@ -1,30 +1,47 @@
 import sys
 from vector import Vector3
 from math import acos, pi
+from random import randint
 
 class Bat:
 
-    MAX_ACCEL = 1
-    VELOCITY_RADIUS = 40
-    CENTER_RADIUS = 40
-    GET_AWAY_RADIUS = 5
+    MAX_ACCEL = .1
+    MAX_VELOCITY = 1
 
-    def __init__(self, center, velocity, color):
+    def __init__(self, center, velocity):
         self.center = center
         self.velocity = velocity
-        self.color = color
+    	self.color = Vector3(0, randint(0, 150) / 255., randint(100, 255) / 255.)
 
     def angle(self, other):
         p = other.center - self.center
         return acos(self.velocity.dot(p) / (p.length() * self.velocity.length()))
 
-    def prepare_update(self, flock):
-        average_center = Vector3(0.,0.,0.)
-        get_away = Vector3(0.,0.,0.)
-        average_velocity = Vector3(0.,0.,0.)
+    def prepare_update(self, flock, env):
+        accelerations = {
+            'center' : {
+            	'vector' : Vector3(0.,0.,0.),
+                'radius' : 40,
+                'count' : 0,
+                'weight' : 10,
+                'update': lambda self, other, d, angle_factor: (other.center - self.center) / (d ** 2.) * angle_factor
+            },
+            'get_away' : {
+            	'vector' : Vector3(0.,0.,0.),
+                'radius' : 20,
+                'count' : 0,
+                'weight' : 12,
+                'update': lambda self, other, d, angle_factor: (self.center - other.center) / (d ** 2.) * angle_factor
+            },
+            'velocity' : {
+            	'vector' : Vector3(0.,0.,0.),
+                'radius' : 40,
+                'count' : 0,
+                'weight' : 8,
+                'update': lambda self, other, d, angle_factor: (other.velocity - self.velocity) / (d ** 2.) * angle_factor
+            }
+        }
 
-        average_center_count = 0
-        average_velocity_count = 0
         for f in flock:
             if f == self:
                 continue
@@ -34,31 +51,42 @@ class Bat:
             if d == 0:
             	continue
 
-            # XXX changing the power here is one way to tweak degree
-            # of angle dependence
-            angle_factor = (1. - self.angle(f) / (2. * pi)) ** 3.
-            if d < self.GET_AWAY_RADIUS:
-                get_away += (self.center - f.center) / (d ** 2.) * angle_factor
-            if d < self.CENTER_RADIUS:
-                average_center += f.center * angle_factor
-                average_center_count += 1
-            if d < self.VELOCITY_RADIUS:
-                average_velocity += f.velocity / (d ** 2.) * angle_factor
-                average_velocity_count += 1
+            # increasing the power increases angle dependence
+            angle_factor = (1. - self.angle(f) / (2. * pi)) ** 2.
 
-        # in case no other bats are around
-        if average_center_count > 0:
-            average_center /= average_center_count
-        center_vector = average_center - self.center
+            for a in accelerations:
+                if d < accelerations[a]['radius']:
+                	accelerations[a]['vector'] += accelerations[a]['update'](self, f, d, angle_factor)
+                	accelerations[a]['count'] += 1
 
-        if average_velocity_count > 0:
-            average_velocity /= average_velocity_count
+            for a in accelerations:
+            	if accelerations[a]['count'] > 0:
+                    accelerations[a]['vector'] /= accelerations[a]['count']
 
-        # acceleration = self.priority_acceleration(get_away, average_velocity, center_vector)
-        acceleration = self.weighted_acceleration(get_away, average_velocity, center_vector)
+        # XXX how should this work? for now just go in the average direction of food, but maybe
+        # at a certain distance just pick a single item of food and go straight for it?
+        #average_food_velocity = Vector3(0.,0.,0.)
+        #avreage_food_count = 0
+        #for e in env:
+        #	d = self.center.distance(e.center)
+
+        #	if d == 0:
+        #		e.eaten = True
+        #		continue
+        #	if d = 
+
+
+        # remove all eaten food from the environment
+        #env[:] = [e for e in env if not e.eaten]
+
+        acceleration = self.weighted_acceleration(accelerations)
+        #acceleration = self.priority_acceleration(accelerations)
 
         self.updated_velocity = self.velocity + acceleration
-        self.updated_velocity.normalize()
+
+        # XXX some different way of handling this?
+        if self.updated_velocity.length() > self.MAX_VELOCITY:
+        	self.updated_velocity = self.updated_velocity.normalize() * self.MAX_VELOCITY
 
     # Static priority: get away, average center, then average velocity
     def priority_acceleration(self, get_away, average_velocity, center_vector):
@@ -76,15 +104,16 @@ class Bat:
                 break
         return acceleration
 
-    def weighted_acceleration(self, get_away, average_velocity, center_vector):
+    def weighted_acceleration(self, accelerations):
         acceleration = Vector3(0,0,0)
-        if get_away.length() != 0:
-            acceleration += get_away.normalize() * 10
-        if average_velocity.length() != 0:
-            acceleration += average_velocity.normalize() * 5
-        if center_vector.length() != 0:
-            acceleration += center_vector.normalize() * 8
-        acceleration = acceleration.normalize() * .1
+
+        for a in accelerations:
+            if accelerations[a]['vector'].length() != 0:
+                acceleration += accelerations[a]['vector'].normalize() * accelerations[a]['weight']
+
+        if acceleration.length() != 0 and acceleration.length() > self.MAX_ACCEL:
+            acceleration = acceleration.normalize() * self.MAX_ACCEL
+
         return acceleration
 
 
