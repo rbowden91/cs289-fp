@@ -12,7 +12,7 @@ if __name__ == "__main__":
     flock = []
     for i in range(NUM_BATS):
     	center = Vector3.random() * 50
-    	velocity = Vector3.random() * 2
+    	velocity = Vector3.random()
         b = Bat(center, velocity)
         flock.append(b)
 

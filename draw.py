@@ -7,7 +7,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 
 from vector import Vector3
-from math import pi
+from math import pi, acos
 from sphere import draw_sphere
 from food import Food
 import arcball
@@ -27,6 +27,7 @@ class DrawFlock:
         self.zoom = -200
         self.camera_center = [0,0,0]
         self.quaternion = (1, Vector3(0,0,0))
+        self.i = 0
 
     def main(self):
         pygame.init()
@@ -111,9 +112,26 @@ class DrawFlock:
 
             for bat in self.flock:
             	glPushMatrix()
+
                 # XXX does this make sense when no longer following?
             	glTranslate(bat.center[0] - flock_center[0], bat.center[1] - flock_center[1], bat.center[2] - flock_center[2])
-                draw_sphere(1, bat.color)
+
+
+                # have the cone face in the direction of the velocity vector
+                up = Vector3(0,1,0)
+                axis_of_rotation = bat.velocity.cross(up)
+                angle_of_rotation = acos(bat.velocity.dot(up) / (up.length() * bat.velocity.length()))
+                glRotatef(angle_of_rotation * 180 / pi,
+                          axis_of_rotation[0],
+                          axis_of_rotation[1],
+                          axis_of_rotation[2])
+
+                # draw the bat cone
+                glColor3fv(bat.color.toList())
+                quadric = gluNewQuadric()
+                gluCylinder(quadric, 2, 0, 5, 100, 100)
+                gluDeleteQuadric(quadric)
+
                 glPopMatrix()
             glPopMatrix()
 
@@ -131,6 +149,7 @@ class DrawFlock:
             	food_center = Vector3.random() * 50
                 food_center += flock_center
             	self.env.append(Food(food_center))
+
 
             pygame.display.flip()
 
