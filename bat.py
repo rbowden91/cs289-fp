@@ -34,7 +34,9 @@ class Bat:
             if d == 0:
             	continue
 
-            angle_factor = (1. - self.angle(f) / (2. * pi))
+            # XXX changing the power here is one way to tweak degree
+            # of angle dependence
+            angle_factor = (1. - self.angle(f) / (2. * pi)) ** 3.
             if d < self.GET_AWAY_RADIUS:
                 get_away += (self.center - f.center) / (d ** 2.) * angle_factor
             if d < self.CENTER_RADIUS:
