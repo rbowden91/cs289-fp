@@ -88,24 +88,32 @@ class Bat:
                 if 'post_update' in accelerations[a]:
                     accelerations[a]['vector'] = accelerations[a]['post_update'](self, accelerations[a]['vector'])
 
-        # XXX how should this work? for now just go in the average direction of food, but maybe
-        # at a certain distance just pick a single item of food and go straight for it?
         for e in env:
+
             d = self.center.distance(e.center)
+            angle_factor = (1. - self.angle(e) / (2. * pi))
 
             if d < 1:
                 e.eaten = True
                 continue
 
-            angle_factor = (1. - self.angle(e) / (2. * pi))
+            # If you're close to a particular piece of food, only target it
+            elif d < 10:
+                boost = env_accelerations['food']['update'](self, e)
+                boost /= d ** env_accelerations['food']['distance_power']
+                boost *= angle_factor ** env_accelerations['food']['angle_power']
+                env_accelerations['food']['vector'] = boost
+                env_accelerations['food']['count'] = 1
 
-            for a in env_accelerations:
-                if d < env_accelerations[a]['radius']:
-                    boost = env_accelerations[a]['update'](self, e)
-                    boost /= d ** env_accelerations[a]['distance_power']
-                    boost *= angle_factor ** env_accelerations[a]['angle_power']
-                    env_accelerations[a]['vector'] += boost
-                    env_accelerations[a]['count'] += 1
+            # Otherwise go in average direction of food
+            else:
+                for a in env_accelerations:
+                    if d < env_accelerations[a]['radius']:
+                        boost = env_accelerations[a]['update'](self, e)
+                        boost /= d ** env_accelerations[a]['distance_power']
+                        boost *= angle_factor ** env_accelerations[a]['angle_power']
+                        env_accelerations[a]['vector'] += boost
+                        env_accelerations[a]['count'] += 1
 
         for a in env_accelerations:
             if env_accelerations[a]['count'] > 0:
