@@ -9,7 +9,8 @@ class Bat:
     MAX_FORCE = .05
     MAX_VELOCITY = 2
 
-    def __init__(self, center, velocity):
+    def __init__(self, id, center, velocity):
+        self.id = id
         self.center = center
         self.velocity = velocity
         color = Vector3(0, randint(0, 150) / 255., randint(100, 255) / 255.)
@@ -170,11 +171,11 @@ class Bat:
         	self.rounds_in_front = 0
 
         # the bat seems to be at the front, and so can choose to lead the tunnel in some direction
-        if self.rounds_in_front > 25:
-            # self.color = Vector3(150.,  0., 0.)
+        if self.rounds_in_front > 40:
+            self.color = Vector3(150.,  0., 0.)
             acceleration = self.leader_acceleration()
         else:
-            # self.color = self.original_color
+            self.color = self.original_color
             acceleration = self.weighted_acceleration(accelerations)
 
         self.updated_velocity = self.velocity + acceleration
@@ -196,7 +197,6 @@ class Bat:
 
 
     def leader_acceleration(self):
-        # todo: not this
         return (self.center - self.arbitrary_point).normalize()
 
     def apply_update(self):
