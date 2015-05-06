@@ -18,9 +18,10 @@ class Bat:
         p = other.center - self.center
         return acos(self.velocity.dot(p) / (p.length() * self.velocity.length()))
 
-    def prepare_update(self, flock, env):
+    def prepare_update(self, flock, env, predators):
         accelerations = {
             'center' : {
+            	'type' : 'flock',
                 'vector' : Vector3(0.,0.,0.),
                 'radius' : 100,
                 'count' : 0,
@@ -30,7 +31,18 @@ class Bat:
                 'update': lambda self, other: other.center,
                 'post_update': lambda self, val: val - self.center
             },
+            'avoid_predator' : {
+                'type' : 'predators',
+                'vector' : Vector3(0.,0.,0.),
+                'radius' : 20,
+                'count' : 0,
+                'weight' : 3,
+                'distance_power' : 1,
+                'angle_power' : 0,
+                'update': lambda self, other: (self.center - other.center).normalize()
+            },
             'get_away' : {
+            	'type' : 'flock',
                 'vector' : Vector3(0.,0.,0.),
                 'radius' : 20,
                 'count' : 0,
@@ -40,6 +52,7 @@ class Bat:
                 'update': lambda self, other: (self.center - other.center).normalize()
             },
             'velocity' : {
+            	'type' : 'flock',
                 'vector' : Vector3(0.,0.,0.),
                 'radius' : 100,
                 'count' : 0,
@@ -63,26 +76,34 @@ class Bat:
             }
         }
 
-        for f in flock:
-            if f == self:
-                continue
-            d = self.center.distance(f.center)
+        def update_acceleration(self, accel, obj):
+            d = self.center.distance(obj.center)
 
             # if the bats somehow occupy same point in space, ignore
             if d == 0:
-                continue
+            	return
 
-            angle_factor = (1. - self.angle(f) / (2. * pi))
+            angle_factor = (1. - self.angle(obj) / (2. * pi))
+            if d < accel['radius']:
+                boost = accel['update'](self, i)
+                boost /= d ** accel['distance_power']
+                boost *= angle_factor ** accel['angle_power']
+                accel['vector'] += boost
+                accel['count'] += 1
 
-            for a in accelerations:
-                if d < accelerations[a]['radius']:
-                    boost = accelerations[a]['update'](self, f)
-                    boost /= d ** accelerations[a]['distance_power']
-                    boost *= angle_factor ** accelerations[a]['angle_power']
-                    accelerations[a]['vector'] += boost
-                    accelerations[a]['count'] += 1
+        type_to_list = {
+            'flock' : flock,
+            'predators' : predators,
+            'env' : env
+        }
 
         for a in accelerations:
+            # loop over the appropriate list for this acceleration type
+            for i in type_to_list[accelerations[a]['type']]:
+                if i == self:
+                    continue
+                update_acceleration(self, accelerations[a], i)
+
             if accelerations[a]['count'] > 0:
                 accelerations[a]['vector'] /= accelerations[a]['count']
                 if 'post_update' in accelerations[a]:
@@ -158,7 +179,7 @@ class Bat:
                 steer = accelerations[a]['vector'].normalize() * self.MAX_VELOCITY
                 steer -= self.velocity
                 if steer.length() > self.MAX_FORCE:
-                	steer = steer.normalize() * self.MAX_FORCE
+                    steer = steer.normalize() * self.MAX_FORCE
 
                 steer *= accelerations[a]['weight']
                 acceleration += steer

@@ -10,15 +10,17 @@ from vector import Vector3
 from math import pi, acos
 from sphere import draw_sphere
 from food import Food
+from predator import Predator
 import arcball
 
 class DrawFlock:
 
     FOV = 45
 
-    def __init__(self, flock, env, updater):
+    def __init__(self, flock, env, predators, updater):
         self.flock = flock
         self.env = env
+        self.predators = predators
         self.update = updater
         self.following = False
         self.rotating = False
@@ -27,7 +29,6 @@ class DrawFlock:
         self.zoom = -200
         self.camera_center = [0,0,0]
         self.quaternion = (1, Vector3(0,0,0))
-        self.i = 0
 
     def main(self):
         pygame.init()
@@ -44,6 +45,7 @@ class DrawFlock:
 
             # set to true if `p` key is pressed
             generate_food = False
+            generate_predator = False
 
             # handle mouse and keyboard events
             for event in pygame.event.get():
@@ -59,6 +61,8 @@ class DrawFlock:
             		    self.zoom += 10
             		elif event.key == pygame.K_p:
             		    generate_food = True
+            		elif event.key == pygame.K_o:
+            		    generate_predator = True
 
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     self.mouse_prev = pygame.mouse.get_pos()
@@ -141,6 +145,12 @@ class DrawFlock:
             	draw_sphere(1, food.color)
             	glPopMatrix()
 
+            for p in self.predators:
+            	glPushMatrix()
+            	glTranslate(p.center[0], p.center[1], p.center[2])
+            	draw_sphere(1, p.color)
+            	glPopMatrix()
+
             if new_quaternion is not None:
             	self.quaternion = new_quaternion
 
@@ -149,6 +159,10 @@ class DrawFlock:
             	food_center = Vector3.random() * 50
                 food_center += flock_center
             	self.env.append(Food(food_center))
+            if generate_predator:
+            	predator_center = Vector3.random() * 50
+            	predator_center += flock_center
+            	self.predators.append(Predator(predator_center))
 
 
             pygame.display.flip()

@@ -19,13 +19,15 @@ if __name__ == "__main__":
     # environment, potentially including food and predators
     env = []
 
+    predators = []
+
     # in order to prevent the order of the bats from mattering, updates are all applied at once
     def update():
-        for f in flock:
-            f.prepare_update(flock, env)
-        for f in flock:
-            f.apply_update()
+        for i in flock + env + predators:
+            i.prepare_update(flock, env, predators)
+        for i in flock + env + predators:
+            i.apply_update()
 
     # draw our flock
-    df = DrawFlock(flock, env, update)
+    df = DrawFlock(flock, env, predators, update)
     df.main()
