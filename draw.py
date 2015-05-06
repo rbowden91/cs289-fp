@@ -7,7 +7,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 
 from vector import Vector3
-from math import pi, acos
+from math import pi, acos, atan2
 from sphere import draw_sphere
 from food import Food
 from predator import Predator
@@ -122,13 +122,14 @@ class DrawFlock:
                             bat.center[2])
 
                 # have the cone face in the direction of the velocity vector
-                #up = Vector3(0,0,-1)
-                #axis_of_rotation = bat.velocity.cross(up)
-                #angle_of_rotation = acos(bat.velocity.dot(up) / (up.length() * bat.velocity.length()))
-                #glRotatef(angle_of_rotation * 180 / pi,
-                #          axis_of_rotation[0],
-                #          axis_of_rotation[1],
-                #          axis_of_rotation[2])
+                x,y,z = bat.velocity.toList()
+                if x < .00001 and y < .00001:
+                	yaw = 0
+                else:
+                	yaw = atan2(x,z) * 180 / pi
+                pitch = -atan2(y, (x * x + z * z) ** .5) * 180 / pi
+                glRotatef(yaw, 0, 1, 0)
+                glRotatef(pitch, 1, 0, 0)
 
                 # draw the bat cone
                 glColor3fv(bat.color.toList())
