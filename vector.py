@@ -133,6 +133,7 @@ class Vector3:
         return Vector3(self.coords[1] * other.coords[2] - self.coords[2] * other.coords[1],
             self.coords[2] * other.coords[0] - self.coords[0] * other.coords[2],
             self.coords[0] * other.coords[1] - self.coords[1] * other.coords[0])
+
     def limit(self, limit):
         if (self.length() > limit):
         	updated = self.normalize() * limit

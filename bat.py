@@ -12,7 +12,9 @@ class Bat:
     def __init__(self, center, velocity):
         self.center = center
         self.velocity = velocity
-        self.color = Vector3(0, randint(0, 150) / 255., randint(100, 255) / 255.)
+        color = Vector3(0, randint(0, 150) / 255., randint(100, 255) / 255.)
+        self.color = color
+        self.original_color = color
         self.rounds_in_front = 0
         self.arbitrary_point = Vector3(0,0,0)
 
@@ -92,6 +94,11 @@ class Bat:
             }
         }
 
+        def print_accelerations():
+            for a in accelerations:
+                print a, accelerations[a]["vector"].toList()
+            print "__"
+
         def update_acceleration(self, accel, obj):
             d = self.center.distance(obj.center)
 
@@ -149,13 +156,12 @@ class Bat:
         # remove all eaten food from the environment
         env[:] = [e for e in env if not e.eaten]
 
-
         # calculate the number of bats in front of this one
         front_bats = 0
         for f in flock:
         	if (f.center - self.center).length() == 0:
         		continue
-        	if self.angle(f) / pi > .8:
+        	if self.angle(f) / pi < .2:
         		front_bats += 1
 
         if front_bats == 0:
@@ -165,30 +171,14 @@ class Bat:
 
         # the bat seems to be at the front, and so can choose to lead the tunnel in some direction
         if self.rounds_in_front > 25:
-        	pass
-
-
-        acceleration = self.weighted_acceleration(accelerations)
-        #acceleration = self.priority_acceleration(accelerations)
+            # self.color = Vector3(150.,  0., 0.)
+            acceleration = self.leader_acceleration()
+        else:
+            # self.color = self.original_color
+            acceleration = self.weighted_acceleration(accelerations)
 
         self.updated_velocity = self.velocity + acceleration
         self.updated_velocity.limit(self.MAX_VELOCITY)
-
-    # Static priority: get away, average center, then average velocity
-    def priority_acceleration(self, get_away, average_velocity, center_vector):
-        acceleration = Vector3(0,0,0)
-        acceleration_magnitude = 0
-
-        for vector in [get_away, center_vector, average_velocity * 100]:
-            if self.MAX_ACCEL > acceleration_magnitude + vector.length():
-                acceleration_magnitude += vector.length()
-                acceleration += vector
-            else:
-                scale = (self.MAX_ACCEL - acceleration_magnitude) / vector.length()
-                vector *= scale
-                acceleration += vector
-                break
-        return acceleration
 
     def weighted_acceleration(self, accelerations):
         acceleration = Vector3(0,0,0)
@@ -201,14 +191,13 @@ class Bat:
 
                 steer *= accelerations[a]['weight']
                 acceleration += steer
-            #print a,':',steer.coords
-
-        #acceleration += Vector3.random() * .5
-        #if acceleration.length() != 0 and acceleration.length() > self.MAX_ACCEL:
-        #    acceleration = acceleration.normalize() * self.MAX_ACCEL
 
         return acceleration
 
+
+    def leader_acceleration(self):
+        # todo: not this
+        return (self.center - self.arbitrary_point).normalize()
 
     def apply_update(self):
         self.center += self.velocity
