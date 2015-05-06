@@ -122,13 +122,13 @@ class DrawFlock:
                             bat.center[2])
 
                 # have the cone face in the direction of the velocity vector
-                up = Vector3(0,1,0)
-                axis_of_rotation = bat.velocity.cross(up)
-                angle_of_rotation = acos(bat.velocity.dot(up) / (up.length() * bat.velocity.length()))
-                glRotatef(angle_of_rotation * 180 / pi,
-                          axis_of_rotation[0],
-                          axis_of_rotation[1],
-                          axis_of_rotation[2])
+                #up = Vector3(0,0,-1)
+                #axis_of_rotation = bat.velocity.cross(up)
+                #angle_of_rotation = acos(bat.velocity.dot(up) / (up.length() * bat.velocity.length()))
+                #glRotatef(angle_of_rotation * 180 / pi,
+                #          axis_of_rotation[0],
+                #          axis_of_rotation[1],
+                #          axis_of_rotation[2])
 
                 # draw the bat cone
                 glColor3fv(bat.color.toList())
@@ -140,6 +140,7 @@ class DrawFlock:
 
             for food in self.env:
                 glPushMatrix()
+                #print food.eaten, food.center.coords, len(self.env)
                 glTranslate(food.center[0], food.center[1], food.center[2])
                 draw_sphere(1, food.color)
                 glPopMatrix()

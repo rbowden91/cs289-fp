@@ -25,9 +25,9 @@ class Bat:
                 'vector' : Vector3(0.,0.,0.),
                 'radius' : 100,
                 'count' : 0,
-                'weight' : 1,
+                'weight' : 2,
                 'distance_power' : 0,
-                'angle_power' : 0,
+                'angle_power' : -1,
                 'update': lambda self, other: other.center,
                 'post_update': lambda self, val: val - self.center
             },
@@ -44,11 +44,11 @@ class Bat:
             'get_away' : {
                 'type' : 'flock',
                 'vector' : Vector3(0.,0.,0.),
-                'radius' : 20,
+                'radius' : 30,
                 'count' : 0,
                 'weight' : 1.5,
                 'distance_power' : 1,
-                'angle_power' : 0,
+                'angle_power' : 1,
                 'update': lambda self, other: (self.center - other.center).normalize()
             },
             'velocity' : {
@@ -73,13 +73,13 @@ class Bat:
                 'post_update': lambda self, val: val - self.center
             },
             'food_target' : {
-            	'type' : 'food',
-            	'vector' : Vector3(0.,0.,0.),
-            	'radius' : 10,
-            	'count' : 0,
-            	'weight' : 5,
-            	'distance_power' : 1,
-            	'angle_power' : 0,
+                'type' : 'food',
+                'vector' : Vector3(0.,0.,0.),
+                'radius' : 10,
+                'count' : 0,
+                'weight' : 5,
+                'distance_power' : 1,
+                'angle_power' : 0,
                 'update': lambda self, other: other.center,
                 'post_update': lambda self, val: val - self.center
             }
@@ -93,12 +93,12 @@ class Bat:
                 return
 
             if accel['type'] == 'food' and d < 1:
-            	obj.eaten = True
-            	return
+                obj.eaten = True
+                return
 
             angle_factor = (1. - self.angle(obj) / (2. * pi))
             if d < accel['radius']:
-                boost = accel['update'](self, obj)
+                boost = accel['update'](self, obj) + 0
                 boost /= d ** accel['distance_power']
                 boost *= angle_factor ** accel['angle_power']
                 accel['vector'] += boost
@@ -118,7 +118,8 @@ class Bat:
 
                     # If you're close to a particular piece of food, only target it
                     if d < accelerations['food_target']['radius']:
-                        boost = accelerations['food_target']['update'](self, e)
+                        # hackish +0 to make a copy of the returned vector
+                        boost = accelerations['food_target']['update'](self, e) + 0
                         boost /= d ** accelerations['food_target']['distance_power']
                         boost *= angle_factor ** accelerations['food_target']['angle_power']
                         accelerations['food_target']['vector'] = boost
@@ -129,7 +130,7 @@ class Bat:
                 # loop over the appropriate list for this acceleration type
                 for i in type_to_list[accelerations[a]['type']]:
                     if (accelerations[a]['type'] == 'flock' and i == self) or (accelerations[a]['type'] == 'food' and i.eaten):
-                    	continue
+                        continue
                     update_acceleration(self, accelerations[a], i)
 
             if accelerations[a]['count'] > 0:
