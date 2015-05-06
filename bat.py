@@ -50,6 +50,19 @@ class Bat:
             }
         }
 
+        env_accelerations = {
+            'food' : {
+                'vector' : Vector3(0.,0.,0.),
+                'radius' : 100,
+                'count' : 0,
+                'weight' : 1,
+                'distance_power' : 0,
+                'angle_power' : 0,
+                'update': lambda self, other: other.center,
+                'post_update': lambda self, val: val - self.center
+            }
+        }
+
         for f in flock:
             if f == self:
                 continue
@@ -77,20 +90,33 @@ class Bat:
 
         # XXX how should this work? for now just go in the average direction of food, but maybe
         # at a certain distance just pick a single item of food and go straight for it?
-        #average_food_velocity = Vector3(0.,0.,0.)
-        #avreage_food_count = 0
-        #for e in env:
-        #   d = self.center.distance(e.center)
+        for e in env:
+            d = self.center.distance(e.center)
 
-        #   if d == 0:
-        #       e.eaten = True
-        #       continue
-        #   if d = 
+            if d < 1:
+                e.eaten = True
+                continue
 
+            angle_factor = (1. - self.angle(e) / (2. * pi))
+
+            for a in env_accelerations:
+                if d < env_accelerations[a]['radius']:
+                    boost = env_accelerations[a]['update'](self, e)
+                    boost /= d ** env_accelerations[a]['distance_power']
+                    boost *= angle_factor ** env_accelerations[a]['angle_power']
+                    env_accelerations[a]['vector'] += boost
+                    env_accelerations[a]['count'] += 1
+
+        for a in env_accelerations:
+            if env_accelerations[a]['count'] > 0:
+                env_accelerations[a]['vector'] /= env_accelerations[a]['count']
+                if 'post_update' in env_accelerations[a]:
+                    env_accelerations[a]['vector'] = env_accelerations[a]['post_update'](self, env_accelerations[a]['vector'])
 
         # remove all eaten food from the environment
-        #env[:] = [e for e in env if not e.eaten]
+        env[:] = [e for e in env if not e.eaten]
 
+        accelerations.update(env_accelerations)
         acceleration = self.weighted_acceleration(accelerations)
         #acceleration = self.priority_acceleration(accelerations)
 
