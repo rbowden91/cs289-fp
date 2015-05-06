@@ -21,7 +21,7 @@ class Bat:
     def prepare_update(self, flock, env, predators):
         accelerations = {
             'center' : {
-            	'type' : 'flock',
+                'type' : 'flock',
                 'vector' : Vector3(0.,0.,0.),
                 'radius' : 100,
                 'count' : 0,
@@ -42,7 +42,7 @@ class Bat:
                 'update': lambda self, other: (self.center - other.center).normalize()
             },
             'get_away' : {
-            	'type' : 'flock',
+                'type' : 'flock',
                 'vector' : Vector3(0.,0.,0.),
                 'radius' : 20,
                 'count' : 0,
@@ -52,7 +52,7 @@ class Bat:
                 'update': lambda self, other: (self.center - other.center).normalize()
             },
             'velocity' : {
-            	'type' : 'flock',
+                'type' : 'flock',
                 'vector' : Vector3(0.,0.,0.),
                 'radius' : 100,
                 'count' : 0,
@@ -60,11 +60,9 @@ class Bat:
                 'distance_power' : 0,
                 'angle_power' : 0,
                 'update': lambda self, other: other.velocity
-            }
-        }
-
-        env_accelerations = {
-            'food' : {
+            },
+            'food_seek' : {
+                'type' : 'food',
                 'vector' : Vector3(0.,0.,0.),
                 'radius' : 100,
                 'count' : 0,
@@ -73,19 +71,34 @@ class Bat:
                 'angle_power' : 0,
                 'update': lambda self, other: other.center,
                 'post_update': lambda self, val: val - self.center
+            },
+            'food_target' : {
+            	'type' : 'food',
+            	'vector' : Vector3(0.,0.,0.),
+            	'radius' : 10,
+            	'count' : 0,
+            	'weight' : 5,
+            	'distance_power' : 1,
+            	'angle_power' : 0,
+                'update': lambda self, other: other.center,
+                'post_update': lambda self, val: val - self.center
             }
         }
 
         def update_acceleration(self, accel, obj):
             d = self.center.distance(obj.center)
 
-            # if the bats somehow occupy same point in space, ignore
+            # if somehow occupy same point in space, ignore
             if d == 0:
+                return
+
+            if accel['type'] == 'food' and d < 1:
+            	obj.eaten = True
             	return
 
             angle_factor = (1. - self.angle(obj) / (2. * pi))
             if d < accel['radius']:
-                boost = accel['update'](self, i)
+                boost = accel['update'](self, obj)
                 boost /= d ** accel['distance_power']
                 boost *= angle_factor ** accel['angle_power']
                 accel['vector'] += boost
@@ -94,66 +107,44 @@ class Bat:
         type_to_list = {
             'flock' : flock,
             'predators' : predators,
-            'env' : env
+            'food' : env
         }
 
         for a in accelerations:
-            # loop over the appropriate list for this acceleration type
-            for i in type_to_list[accelerations[a]['type']]:
-                if i == self:
-                    continue
-                update_acceleration(self, accelerations[a], i)
+            if a == 'food_target':
+                for e in env:
+                    d = self.center.distance(e.center)
+                    angle_factor = (1. - self.angle(e) / (2. * pi))
+
+                    # If you're close to a particular piece of food, only target it
+                    if d < accelerations['food_target']['radius']:
+                        boost = accelerations['food_target']['update'](self, e)
+                        boost /= d ** accelerations['food_target']['distance_power']
+                        boost *= angle_factor ** accelerations['food_target']['angle_power']
+                        accelerations['food_target']['vector'] = boost
+                        accelerations['food_target']['count'] = 1
+                        break
+
+            else:
+                # loop over the appropriate list for this acceleration type
+                for i in type_to_list[accelerations[a]['type']]:
+                    if (accelerations[a]['type'] == 'flock' and i == self) or (accelerations[a]['type'] == 'food' and i.eaten):
+                    	continue
+                    update_acceleration(self, accelerations[a], i)
 
             if accelerations[a]['count'] > 0:
                 accelerations[a]['vector'] /= accelerations[a]['count']
                 if 'post_update' in accelerations[a]:
                     accelerations[a]['vector'] = accelerations[a]['post_update'](self, accelerations[a]['vector'])
 
-        for e in env:
-
-            d = self.center.distance(e.center)
-            angle_factor = (1. - self.angle(e) / (2. * pi))
-
-            if d < 1:
-                e.eaten = True
-                continue
-
-            # If you're close to a particular piece of food, only target it
-            elif d < 10:
-                boost = env_accelerations['food']['update'](self, e)
-                boost /= d ** env_accelerations['food']['distance_power']
-                boost *= angle_factor ** env_accelerations['food']['angle_power']
-                env_accelerations['food']['vector'] = boost
-                env_accelerations['food']['count'] = 1
-
-            # Otherwise go in average direction of food
-            else:
-                for a in env_accelerations:
-                    if d < env_accelerations[a]['radius']:
-                        boost = env_accelerations[a]['update'](self, e)
-                        boost /= d ** env_accelerations[a]['distance_power']
-                        boost *= angle_factor ** env_accelerations[a]['angle_power']
-                        env_accelerations[a]['vector'] += boost
-                        env_accelerations[a]['count'] += 1
-
-        for a in env_accelerations:
-            if env_accelerations[a]['count'] > 0:
-                env_accelerations[a]['vector'] /= env_accelerations[a]['count']
-                if 'post_update' in env_accelerations[a]:
-                    env_accelerations[a]['vector'] = env_accelerations[a]['post_update'](self, env_accelerations[a]['vector'])
-
         # remove all eaten food from the environment
         env[:] = [e for e in env if not e.eaten]
 
-        accelerations.update(env_accelerations)
         acceleration = self.weighted_acceleration(accelerations)
         #acceleration = self.priority_acceleration(accelerations)
 
         self.updated_velocity = self.velocity + acceleration
-
-        # XXX some different way of handling this?
-        if self.updated_velocity.length() > self.MAX_VELOCITY:
-            self.updated_velocity = self.updated_velocity.normalize() * self.MAX_VELOCITY
+        self.updated_velocity.limit(self.MAX_VELOCITY)
 
     # Static priority: get away, average center, then average velocity
     def priority_acceleration(self, get_away, average_velocity, center_vector):
@@ -178,8 +169,7 @@ class Bat:
             if accelerations[a]['vector'].length() > 0:
                 steer = accelerations[a]['vector'].normalize() * self.MAX_VELOCITY
                 steer -= self.velocity
-                if steer.length() > self.MAX_FORCE:
-                    steer = steer.normalize() * self.MAX_FORCE
+                steer.limit(self.MAX_FORCE)
 
                 steer *= accelerations[a]['weight']
                 acceleration += steer

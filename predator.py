@@ -58,8 +58,7 @@ class Predator:
         direction = flock_center - self.center
         direction = direction.normalize() * self.MAX_VELOCITY
         direction -= self.velocity
-        if (direction.length() > self.MAX_FORCE):
-            direction = direction.normalize() * self.MAX_FORCE
+        direction.limit(self.MAX_FORCE)
         self.updated_velocity = self.velocity + direction * 1.5
 
     def apply_update(self):

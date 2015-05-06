@@ -135,4 +135,6 @@ class Vector3:
             self.coords[0] * other.coords[1] - self.coords[1] * other.coords[0])
     def limit(self, limit):
         if (self.length() > limit):
-        	self = self.normalize() * limit
+        	updated = self.normalize() * limit
+        	for i in range(3):
+        		self.coords[i] = updated.coords[i]
