@@ -197,7 +197,7 @@ class Bat:
 
 
     def leader_acceleration(self):
-        return (self.center - self.arbitrary_point).normalize()
+        return (self.arbitrary_point - self.center).normalize()
 
     def apply_update(self):
         self.center += self.velocity
