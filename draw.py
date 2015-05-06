@@ -29,7 +29,7 @@ class DrawFlock:
         self.zoom = -200
         self.world_center = Vector3(0,0,0)
         self.world_quaternion = (1, Vector3(0,0,0))
-        self.i = 0
+        self.draw_arcball = True
 
     def main(self):
         pygame.init()
@@ -56,6 +56,8 @@ class DrawFlock:
                         quit()
                     elif event.key == pygame.K_f:
                         self.following = not self.following
+                    elif event.key == pygame.K_a:
+                        self.draw_arcball = not self.draw_arcball
                     elif event.key == pygame.K_z:
                         self.zoom -= 10
                     elif event.key == pygame.K_x:
@@ -105,13 +107,14 @@ class DrawFlock:
                     self.world_quaternion = arcball.get_arcball_quaternion(flock_center, self.mouse_prev, pos, self.display[1], self.world_quaternion)
                     self.mouse_prev = pos
 
-                glPushMatrix()
-                # bring the ball to the flock center
-                glTranslatef(flock_center[0],
-                             flock_center[1],
-                             flock_center[2])
-                arcball.draw_arcball(flock_center, self.FOV, self.world_center[2] + self.zoom, self.display[1])
-                glPopMatrix()
+                if self.draw_arcball:
+                    glPushMatrix()
+                    # bring the ball to the flock center
+                    glTranslatef(flock_center[0],
+                                flock_center[1],
+                                flock_center[2])
+                    arcball.draw_arcball(flock_center, self.FOV, self.world_center[2] + self.zoom, self.display[1])
+                    glPopMatrix()
 
             for bat in self.flock:
                 glPushMatrix()

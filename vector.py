@@ -139,3 +139,4 @@ class Vector3:
         	updated = self.normalize() * limit
         	for i in range(3):
         		self.coords[i] = updated.coords[i]
+        return self
