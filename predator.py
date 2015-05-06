@@ -14,7 +14,7 @@ class Predator:
         self.center = center
         self.updated_velocity = None
         self.velocity = Vector3.random()
-        self.color = Vector3(0, randint(100, 255) / 255., 0)
+    	self.color = Vector3(randint(100, 255) / 255., randint(0, 150) / 255., 0)
         self.pursue = None
 
     def seek(self, obj):

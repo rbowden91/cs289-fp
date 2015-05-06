@@ -13,6 +13,8 @@ class Bat:
         self.center = center
         self.velocity = velocity
         self.color = Vector3(0, randint(0, 150) / 255., randint(100, 255) / 255.)
+        self.rounds_in_front = 0
+        self.arbitrary_point = Vector3(0,0,0)
 
     def angle(self, other):
         p = other.center - self.center
@@ -101,7 +103,8 @@ class Bat:
                 obj.eaten = True
                 return
 
-            angle_factor = (1. - self.angle(obj) / (2. * pi))
+            # XXX should just be pi
+            angle_factor = 1. - self.angle(obj) / (2 * pi)
             if d < accel['radius']:
                 boost = accel['update'](self, obj) + 0
                 boost /= d ** accel['distance_power']
@@ -145,6 +148,25 @@ class Bat:
 
         # remove all eaten food from the environment
         env[:] = [e for e in env if not e.eaten]
+
+
+        # calculate the number of bats in front of this one
+        front_bats = 0
+        for f in flock:
+        	if (f.center - self.center).length() == 0:
+        		continue
+        	if self.angle(f) / pi > .8:
+        		front_bats += 1
+
+        if front_bats == 0:
+        	self.rounds_in_front += 1
+        else:
+        	self.rounds_in_front = 0
+
+        # the bat seems to be at the front, and so can choose to lead the tunnel in some direction
+        if self.rounds_in_front > 25:
+        	pass
+
 
         acceleration = self.weighted_acceleration(accelerations)
         #acceleration = self.priority_acceleration(accelerations)
