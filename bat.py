@@ -17,7 +17,7 @@ class Bat:
         self.color = color
         self.original_color = color
         self.rounds_in_front = 0
-        self.arbitrary_point = Vector3(0,0,0)
+        self.arbitrary_point = Vector3(500., 100., 200.)
 
     def angle(self, other):
         p = other.center - self.center
@@ -162,7 +162,7 @@ class Bat:
         for f in flock:
         	if (f.center - self.center).length() == 0:
         		continue
-        	if self.angle(f) / pi < .2:
+        	if self.angle(f) / pi < .3:
         		front_bats += 1
 
         if front_bats == 0:
@@ -171,7 +171,10 @@ class Bat:
         	self.rounds_in_front = 0
 
         # the bat seems to be at the front, and so can choose to lead the tunnel in some direction
-        if self.rounds_in_front > 40:
+        if self.rounds_in_front > 25:
+            # d = self.center.distance(self.arbitrary_point)
+            # if d < 10:
+            #     self.arbi
             self.color = Vector3(150.,  0., 0.)
             acceleration = self.leader_acceleration()
         else:
@@ -194,7 +197,6 @@ class Bat:
                 acceleration += steer
 
         return acceleration
-
 
     def leader_acceleration(self):
         return (self.arbitrary_point - self.center).normalize()
