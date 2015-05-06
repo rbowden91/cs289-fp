@@ -69,11 +69,11 @@ class Bat:
                     accelerations[a]['vector'] += boost
                     accelerations[a]['count'] += 1
 
-            for a in accelerations:
-                if accelerations[a]['count'] > 0:
-                    accelerations[a]['vector'] /= accelerations[a]['count']
-                    if 'post_update' in accelerations[a]:
-                        accelerations[a]['vector'] = accelerations[a]['post_update'](self, accelerations[a]['vector'])
+        for a in accelerations:
+            if accelerations[a]['count'] > 0:
+                accelerations[a]['vector'] /= accelerations[a]['count']
+                if 'post_update' in accelerations[a]:
+                    accelerations[a]['vector'] = accelerations[a]['post_update'](self, accelerations[a]['vector'])
 
         # XXX how should this work? for now just go in the average direction of food, but maybe
         # at a certain distance just pick a single item of food and go straight for it?
