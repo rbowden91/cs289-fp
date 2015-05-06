@@ -16,7 +16,12 @@ class Bat:
 
     def angle(self, other):
         p = other.center - self.center
-        return acos(self.velocity.dot(p) / (p.length() * self.velocity.length()))
+        res = self.velocity.dot(p) / (p.length() * self.velocity.length())
+        if res < -1:
+            res = -1
+        elif res > 1:
+            res = 1
+        return acos(res)
 
     def prepare_update(self, flock, env, predators):
         accelerations = {
