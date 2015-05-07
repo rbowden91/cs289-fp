@@ -6,4 +6,11 @@ sudo port install py27-game py27-numpy py27-matplotlib py27-scipy py27-ipython p
 ./main.py
 
 
-Steering Force talk at http://natureofcode.com/book/chapter-6-autonomous-agents/
+Press "F" to follow the flock.
+Click and drag the arcball while following the flock to rotate the camera around the flock.
+Press "H" to toggle the drawing of the arcball while following the flock.
+Press "Z" to zoom out.
+Press "X" to zoom in.
+Press "P" to place a unit of food randomly near the flock.
+Press "O" to place a single predator randomly near the flock.
+Press "Q" to quit.
